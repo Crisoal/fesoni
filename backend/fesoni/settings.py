@@ -127,10 +127,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # API Keys
 GOOGLE_API_KEY = config('GOOGLE_API_KEY', default='')
 QLOO_API_KEY = config('QLOO_API_KEY', default='')
-AMAZON_ACCESS_KEY = config('AMAZON_ACCESS_KEY', default='')
-AMAZON_SECRET_KEY = config('AMAZON_SECRET_KEY', default='')
-AMAZON_ASSOCIATE_TAG = config('AMAZON_ASSOCIATE_TAG', default='')
-WALMART_API_KEY = config('WALMART_API_KEY', default='')
+RAPIDAPI_KEY = config('RAPIDAPI_KEY', default='')
+
 
 # Celery Configuration
 CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379')

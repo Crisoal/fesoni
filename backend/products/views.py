@@ -12,28 +12,32 @@ product_service = ProductService()
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def search_products(request):
-    """Search products based on cultural preferences"""
+    """Search products using Qloo's Taste AI™ as the core cultural intelligence engine"""
     try:
         cultural_context = request.data.get('cultural_context', {})
         search_query = request.data.get('search_query', '')
+        qloo_data = request.data.get('qloo_data', {})  # Expect Qloo insights from chat endpoint
         
-        # Mock product mapping for this example
-        product_mapping = {
-            'product_categories': cultural_context.get('product_categories', []),
-            'taste_score': 0.7
-        }
+        # Validate Qloo data
+        if not qloo_data.get('success', False):
+            return Response({
+                'success': False,
+                'error': 'Invalid Qloo data provided'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Search products
-        products = product_service.search_products(cultural_context, product_mapping)
+        # Search products using Qloo-driven insights
+        products = product_service.search_products(cultural_context, qloo_data)
         
         # Save search for analytics
         search_obj = ProductSearch.objects.create(
             user=request.user,
             search_query=search_query,
-            cultural_context=cultural_context
+            cultural_context=cultural_context,
+            qloo_insights=qloo_data.get('cultural_insights', []),
+            cultural_trends=qloo_data.get('cultural_trends', [])
         )
         
-        # Save recommendations
+        # Save recommendations with Qloo insights
         for product in products:
             ProductRecommendation.objects.create(
                 search=search_obj,
@@ -43,13 +47,16 @@ def search_products(request):
                 product_image=product.get('image'),
                 price=product.get('price'),
                 retailer=product['retailer'],
-                cultural_match_score=product['cultural_match_score']
+                cultural_match_score=product['cultural_match_score'],
+                qloo_insights_applied=product.get('qloo_insights', [])
             )
         
         return Response({
             'success': True,
             'search_id': search_obj.id,
-            'products': products
+            'products': products,
+            'qloo_insights': qloo_data.get('cultural_insights', []),
+            'cultural_trends': qloo_data.get('cultural_trends', [])
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
@@ -59,7 +66,7 @@ def search_products(request):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 class ProductSearchHistoryView(generics.ListAPIView):
-    """Get user's product search history"""
+    """Retrieve user's product search history with Qloo-driven cultural insights"""
     serializer_class = ProductSearchSerializer
     permission_classes = [IsAuthenticated]
     

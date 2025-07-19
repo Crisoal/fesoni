@@ -17,7 +17,7 @@ chat_service = ChatService()
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def chat(request):
-    """Main chat endpoint"""
+    """Process chat messages using Qloo's Taste AI™ as the core cultural intelligence engine"""
     serializer = ChatRequestSerializer(data=request.data)
     if serializer.is_valid():
         result = chat_service.process_message(
@@ -28,7 +28,19 @@ def chat(request):
         )
         
         if result['success']:
-            return Response(result, status=status.HTTP_200_OK)
+            # Update conversation's cultural context summary with Qloo insights
+            if result['conversation_id']:
+                conversation = Conversation.objects.get(id=result['conversation_id'])
+                conversation.update_cultural_context_summary(result['cultural_context'])
+            return Response({
+                'success': True,
+                'conversation_id': result['conversation_id'],
+                'message': result['message'],
+                'cultural_context': result['cultural_context'],
+                'qloo_data': result['qloo_data'],
+                'products': result['products'],
+                'voice_input': result['voice_input']
+            }, status=status.HTTP_200_OK)
         else:
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
     
@@ -37,7 +49,7 @@ def chat(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def conversation_history(request, conversation_id):
-    """Get conversation history"""
+    """Retrieve conversation history with Qloo-driven cultural insights"""
     result = chat_service.get_conversation_history(request.user, conversation_id)
     
     if result['success']:
@@ -46,7 +58,7 @@ def conversation_history(request, conversation_id):
         return Response(result, status=status.HTTP_404_NOT_FOUND)
 
 class ConversationListView(generics.ListAPIView):
-    """List user's conversations"""
+    """List user's conversations with Qloo-powered cultural context"""
     serializer_class = ConversationListSerializer
     permission_classes = [IsAuthenticated]
     
@@ -54,7 +66,7 @@ class ConversationListView(generics.ListAPIView):
         return Conversation.objects.filter(user=self.request.user, is_active=True)
 
 class CulturalPreferenceView(generics.ListAPIView):
-    """Get user's cultural preferences"""
+    """Retrieve user's cultural preferences powered by Qloo's Taste AI™"""
     serializer_class = CulturalPreferenceSerializer
     permission_classes = [IsAuthenticated]
     
@@ -64,7 +76,7 @@ class CulturalPreferenceView(generics.ListAPIView):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_conversation(request, conversation_id):
-    """Delete a conversation"""
+    """Delete a conversation while preserving Qloo-derived cultural data"""
     try:
         conversation = Conversation.objects.get(id=conversation_id, user=request.user)
         conversation.is_active = False
